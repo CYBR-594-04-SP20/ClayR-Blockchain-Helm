@@ -19,7 +19,7 @@ image:
 service:
   type: NodePort
   port: 5000
-  nodePort: 30000
+  nodePort: 31000
 
 imagePullSecrets: []
 nameOverride: ""
