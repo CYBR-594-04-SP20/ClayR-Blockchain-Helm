@@ -14,13 +14,11 @@
 1. Create a couple Bitcoin wallets on the blockchain client's UI
 1. Use the bitcoin wallets to create new transactions and experiment with the blockchain system you've just deployed!
    - For an in depth usage guide please follow the [Python Project creator's article here](http://adilmoujahid.com/posts/2018/03/intro-blockchain-bitcoin-python/)
+1. To Tear Down and uninstall the Helm releases, run the fourth batch script.
 
 ## How to Scale the project in Kubernetes
-1. Edit the scripts to deploy and configure additional Helm chart releases as you see fit for your expanded project
+1. Edit the second and third batch scripts to deploy and configure additional Helm chart releases as you see fit for your expanded project.
 
 # Credits
 *Python Source Code*
 https://github.com/adilmoujahid/blockchain-python-tutorial
-
-## Release
-This project is release for educational purposes only
