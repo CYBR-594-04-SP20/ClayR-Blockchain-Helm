@@ -23,4 +23,3 @@ popd
 
 
 pause
-cmd \k
