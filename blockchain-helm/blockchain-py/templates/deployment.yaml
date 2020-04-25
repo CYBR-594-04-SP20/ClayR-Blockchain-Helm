@@ -25,21 +25,23 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          image: "{{ .Values.image.name }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 5000
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
+         {{- if .Values.node }}
           livenessProbe:
             httpGet:
-              path: /mine
+              path: /nodes/resolve
               port: http
             initialDelaySeconds: {{ .Values.delaySeconds }}
             periodSeconds: {{ .Values.periodSeconds }}
+         {{- end }}
           readinessProbe:
             httpGet:
-              path: /chain
+              path: /
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

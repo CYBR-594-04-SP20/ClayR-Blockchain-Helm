@@ -4,19 +4,22 @@
 
 replicaCount: 1
 
-#the initial delay before first mine
+#the initial delay before first resolve
 delaySeconds: 5
-#the period between mines and livenesschecks
+#the period between resolves
 periodSeconds: 10
 
+node: true
+
+
 image:
-  repository: hackernoon/blockchain
+  name: blockchain-node
   pullPolicy: IfNotPresent
 
 service:
   type: NodePort
   port: 5000
-  nodePort: 30001
+  nodePort: 30000
 
 imagePullSecrets: []
 nameOverride: ""

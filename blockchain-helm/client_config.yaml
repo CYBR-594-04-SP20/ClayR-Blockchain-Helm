@@ -1,0 +1,8 @@
+image:
+  name: blockchain-client
+
+node: false
+
+service:
+  port: 8080
+  nodePort: 30000
