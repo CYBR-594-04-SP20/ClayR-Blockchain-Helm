@@ -288,6 +288,7 @@ def mine():
         'transactions': block['transactions'],
         'nonce': block['nonce'],
         'previous_hash': block['previous_hash'],
+        'merkle_root': block['merkle_root'],
     }
     return jsonify(response), 200
 
