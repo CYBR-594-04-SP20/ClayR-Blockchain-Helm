@@ -20,6 +20,7 @@ References      : [1] https://github.com/dvf/blockchain/blob/master/blockchain.p
 from collections import OrderedDict
 
 import binascii
+import codecs
 
 import Crypto
 import Crypto.Random
@@ -42,20 +43,22 @@ from flask_cors import CORS
 MINING_SENDER = "THE BLOCKCHAIN"
 MINING_REWARD = 1
 MINING_DIFFICULTY = 2
-
+Round = 0
+decode_hex = codecs.getdecoder("hex_codec")
 
 class Blockchain:
 
     def __init__(self):
         
         self.transactions = []
+        self.transaction_ids = []
         self.chain = []
         self.nodes = set()
         #Generate random number to be used as node_id
         self.node_id = str(uuid4()).replace('-', '')
         #Create genesis block
         self.create_block(0, '00')
-
+        print ('starting')
 
     def register_node(self, node_url):
         """
@@ -70,7 +73,48 @@ class Blockchain:
             self.nodes.add(parsed_url.path)
         else:
             raise ValueError('Invalid URL')
+#######################################################################################
+        ### NEW ### Gen transaction id 
+    def gen_txid(self, transaction):
+        tx_string = json.dumps(transaction, sort_keys=True).encode()
+        first_hash = hashlib.sha256(tx_string).hexdigest()
+        #byte_swap_first_hash = first_hash.join(reversed([first_hash[i:i+2] for i in range(0, len(first_hash), 2)]))
+        #second_hash = hashlib.sha256(byte_swap_first_hash).hexdigest()
+        return first_hash
+    
+    # Hash pairs of items recursively until a single value is obtained
+    def merkle(self, hashList):
+        global Round
+        Round = Round + 1
+        if len(hashList) == 1:
 
+            print("AND OUR MERKLE ROOT IS")
+            return hashList[0]
+        newHashList = []
+        print("Number of Branches in Round", Round, "is", len(hashList), file=sys.stdout)
+        
+        # Process pairs. For odd length, last item is hashed with itself
+        for i in range(0, len(hashList)-1, 2):
+            print("Branch",i+1, "is", hashList[i], file=sys.stdout)
+            print("Branch",i+2, "is", hashList[i+1], file=sys.stdout)
+            print("their hash is", self.hash2(hashList[i], hashList[i+1]), file=sys.stdout)
+            print()
+            newHashList.append(self.hash2(hashList[i], hashList[i+1]))
+        if len(hashList) % 2 == 1: # odd, hash last item twice
+            print ("Branch", len(hashList), "is", hashList[len(hashList)-1], file=sys.stdout)
+            print ("And Branch",len(hashList),"is hashed with itself to get", self.hash2(hashList[-1], hashList[-1]), file=sys.stdout)
+            newHashList.append(self.hash2(hashList[-1], hashList[-1]))
+        print("DONE with Round", Round, file=sys.stdout)
+        return merkle(newHashList)
+    
+    def hash2(self, first, second):
+        # Reverse inputs before and after hashing due to big-endian / little-endian nonsense
+        firstreverse = codecs.encode(first[::-1].encode(encoding='UTF-8'),'hex')
+        secondreverse = codecs.encode(second[::-1].encode(encoding='UTF-8'),'hex')
+        h = hashlib.sha256(hashlib.sha256(firstreverse+secondreverse).hexdigest()).hexdigest()
+        return codecs.decode(h[::-1],'hex')
+####################################################################################### 
+        
 
     def verify_transaction_signature(self, sender_address, signature, transaction):
         """
@@ -90,7 +134,12 @@ class Blockchain:
         transaction = OrderedDict({'sender_address': sender_address, 
                                     'recipient_address': recipient_address,
                                     'value': value})
-
+#######################################################################################
+        ### NEW ### Add transaction id to array
+        transaction_id = self.gen_txid(transaction)
+        self.transaction_ids.append(transaction_id)
+#######################################################################################
+   
         #Reward for mining a block
         if sender_address == MINING_SENDER:
             self.transactions.append(transaction)
@@ -109,11 +158,19 @@ class Blockchain:
         """
         Add a block of transactions to the blockchain
         """
+        #skip genesis block
+        if previous_hash == '00' :
+            merkle_root = previous_hash
+        else:
+            test = self.transaction_ids
+            merkle_root = self.merkle(test)
+
         block = {'block_number': len(self.chain) + 1,
                 'timestamp': time(),
                 'transactions': self.transactions,
                 'nonce': nonce,
-                'previous_hash': previous_hash}
+                'previous_hash': previous_hash,
+                'merkle_root': merkle_root}
 
         # Reset the current list of transactions
         self.transactions = []
@@ -130,8 +187,8 @@ class Blockchain:
         block_string = json.dumps(block, sort_keys=True).encode()
         
         return hashlib.sha256(block_string).hexdigest()
-
-
+        
+        
     def proof_of_work(self):
         """
         Proof of work algorithm
@@ -257,7 +314,7 @@ def new_transaction():
 def get_transactions():
     #Get transactions from transactions pool
     transactions = blockchain.transactions
-
+    print ('test message')
     response = {'transactions': transactions}
     return jsonify(response), 200
 
@@ -345,7 +402,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     port = args.port
 
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)
 
 
 
