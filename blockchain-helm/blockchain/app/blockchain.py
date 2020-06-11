@@ -82,37 +82,30 @@ class Blockchain:
         #second_hash = hashlib.sha256(byte_swap_first_hash).hexdigest()
         return first_hash
     
-    # Hash pairs of items recursively until a single value is obtained
+    def hash2(self, a, b):
+        # Reverse inputs before and after hashing
+        # due to big-endian / little-endian nonsense
+        a1 = a
+        a11 = a1[::-1]
+        b1 = b[::-1]
+        concat = a11+b1
+        concat2 = hashlib.sha256(bytes(concat,"utf-8")).hexdigest()
+        print ('hash1:' + concat2)
+        h = hashlib.sha256(bytes(concat,"utf-8")).digest()
+        print ('hash2:' + h[::-1].hex())
+        print ('')
+        return h[::-1].hex()
+        
     def merkle(self, hashList):
-        global Round
-        Round = Round + 1
         if len(hashList) == 1:
-
-            print("AND OUR MERKLE ROOT IS")
             return hashList[0]
         newHashList = []
-        print("Number of Branches in Round", Round, "is", len(hashList), file=sys.stdout)
-        
-        # Process pairs. For odd length, last item is hashed with itself
+        # Process pairs. For odd length, the last is skipped
         for i in range(0, len(hashList)-1, 2):
-            print("Branch",i+1, "is", hashList[i], file=sys.stdout)
-            print("Branch",i+2, "is", hashList[i+1], file=sys.stdout)
-            print("their hash is", self.hash2(hashList[i], hashList[i+1]), file=sys.stdout)
-            print()
             newHashList.append(self.hash2(hashList[i], hashList[i+1]))
         if len(hashList) % 2 == 1: # odd, hash last item twice
-            print ("Branch", len(hashList), "is", hashList[len(hashList)-1], file=sys.stdout)
-            print ("And Branch",len(hashList),"is hashed with itself to get", self.hash2(hashList[-1], hashList[-1]), file=sys.stdout)
             newHashList.append(self.hash2(hashList[-1], hashList[-1]))
-        print("DONE with Round", Round, file=sys.stdout)
-        return merkle(newHashList)
-    
-    def hash2(self, first, second):
-        # Reverse inputs before and after hashing due to big-endian / little-endian nonsense
-        firstreverse = codecs.encode(first[::-1].encode(encoding='UTF-8'),'hex')
-        secondreverse = codecs.encode(second[::-1].encode(encoding='UTF-8'),'hex')
-        h = hashlib.sha256(hashlib.sha256(firstreverse+secondreverse).hexdigest()).hexdigest()
-        return codecs.decode(h[::-1],'hex')
+        return self.merkle(newHashList)
 ####################################################################################### 
         
 
