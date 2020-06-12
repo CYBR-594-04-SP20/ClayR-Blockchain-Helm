@@ -20,7 +20,7 @@ References      : [1] https://github.com/dvf/blockchain/blob/master/blockchain.p
 from collections import OrderedDict
 
 import binascii
-import codecs
+
 
 import Crypto
 import Crypto.Random
@@ -40,11 +40,9 @@ from flask_cors import CORS
 
 
 
-MINING_SENDER = "THE BLOCKCHAIN"
+MINING_SENDER = "REWARD Sender"
 MINING_REWARD = 1
 MINING_DIFFICULTY = 2
-Round = 0
-decode_hex = codecs.getdecoder("hex_codec")
 
 class Blockchain:
 
@@ -59,11 +57,10 @@ class Blockchain:
         #Create genesis block
         self.create_block(0, '00')
         print ('starting')
-
+    
+        # Add a new node to the list of nodes
     def register_node(self, node_url):
-        """
-        Add a new node to the list of nodes
-        """
+
         #Checking node_url has valid format
         parsed_url = urlparse(node_url)
         if parsed_url.netloc:
@@ -73,8 +70,9 @@ class Blockchain:
             self.nodes.add(parsed_url.path)
         else:
             raise ValueError('Invalid URL')
-#######################################################################################
-        ### NEW ### Gen transaction id 
+
+
+        # Generate Transaction ID by Hashing
     def gen_txid(self, transaction):
         tx_string = json.dumps(transaction, sort_keys=True).encode()
         first_hash = hashlib.sha256(tx_string).hexdigest()
@@ -106,9 +104,7 @@ class Blockchain:
         if len(hashList) % 2 == 1: # odd, hash last item twice
             newHashList.append(self.hash2(hashList[-1], hashList[-1]))
         return self.merkle(newHashList)
-####################################################################################### 
-        
-
+ 
     def verify_transaction_signature(self, sender_address, signature, transaction):
         """
         Check that the provided signature corresponds to transaction
@@ -119,7 +115,6 @@ class Blockchain:
         h = SHA.new(str(transaction).encode('utf8'))
         return verifier.verify(h, binascii.unhexlify(signature))
 
-
     def submit_transaction(self, sender_address, recipient_address, value, signature):
         """
         Add a transaction to transactions array if the signature verified
@@ -127,11 +122,11 @@ class Blockchain:
         transaction = OrderedDict({'sender_address': sender_address, 
                                     'recipient_address': recipient_address,
                                     'value': value})
-#######################################################################################
+
         ### NEW ### Add transaction id to array
         transaction_id = self.gen_txid(transaction)
         self.transaction_ids.append(transaction_id)
-#######################################################################################
+
    
         #Reward for mining a block
         if sender_address == MINING_SENDER:
@@ -145,7 +140,6 @@ class Blockchain:
                 return len(self.chain) + 1
             else:
                 return False
-
 
     def create_block(self, nonce, previous_hash):
         """
@@ -171,7 +165,6 @@ class Blockchain:
         self.chain.append(block)
         return block
 
-
     def hash(self, block):
         """
         Create a SHA-256 hash of a block
@@ -180,8 +173,7 @@ class Blockchain:
         block_string = json.dumps(block, sort_keys=True).encode()
         
         return hashlib.sha256(block_string).hexdigest()
-        
-        
+           
     def proof_of_work(self):
         """
         Proof of work algorithm
@@ -195,7 +187,6 @@ class Blockchain:
 
         return nonce
 
-
     def valid_proof(self, transactions, last_hash, nonce, difficulty=MINING_DIFFICULTY):
         """
         Check if a hash value satisfies the mining conditions. This function is used within the proof_of_work function.
@@ -203,7 +194,6 @@ class Blockchain:
         guess = (str(transactions)+str(last_hash)+str(nonce)).encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:difficulty] == '0'*difficulty
-
 
     def valid_chain(self, chain):
         """
@@ -214,9 +204,6 @@ class Blockchain:
 
         while current_index < len(chain):
             block = chain[current_index]
-            #print(last_block)
-            #print(block)
-            #print("\n-----------\n")
             # Check that the hash of the block is correct
             if block['previous_hash'] != self.hash(last_block):
                 return False
@@ -284,7 +271,6 @@ def configure():
     return render_template('./configure.html')
 
 
-
 @app.route('/transactions/new', methods=['POST'])
 def new_transaction():
     values = request.form
@@ -303,6 +289,7 @@ def new_transaction():
         response = {'message': 'Transaction will be added to Block '+ str(transaction_result)}
         return jsonify(response), 201
 
+
 @app.route('/transactions/get', methods=['GET'])
 def get_transactions():
     #Get transactions from transactions pool
@@ -311,6 +298,7 @@ def get_transactions():
     response = {'transactions': transactions}
     return jsonify(response), 200
 
+
 @app.route('/chain', methods=['GET'])
 def full_chain():
     response = {
@@ -318,6 +306,7 @@ def full_chain():
         'length': len(blockchain.chain),
     }
     return jsonify(response), 200
+
 
 @app.route('/mine', methods=['GET'])
 def mine():
@@ -341,7 +330,6 @@ def mine():
         'merkle_root': block['merkle_root'],
     }
     return jsonify(response), 200
-
 
 
 @app.route('/nodes/register', methods=['POST'])
@@ -384,7 +372,6 @@ def get_nodes():
     nodes = list(blockchain.nodes)
     response = {'nodes': nodes}
     return jsonify(response), 200
-
 
 
 if __name__ == '__main__':
