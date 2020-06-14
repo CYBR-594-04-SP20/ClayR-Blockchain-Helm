@@ -123,19 +123,20 @@ class Blockchain:
                                     'recipient_address': recipient_address,
                                     'value': value})
 
-        ### NEW ### Add transaction id to array
+        ### NEW ### Add transaction id to array and dict
         transaction_id = self.gen_txid(transaction)
         self.transaction_ids.append(transaction_id)
-
    
         #Reward for mining a block
         if sender_address == MINING_SENDER:
+            transaction.update({'tx_id':transaction_id}) #add tx_id 
             self.transactions.append(transaction)
             return len(self.chain) + 1
         #Manages transactions from wallet to another wallet
         else:
             transaction_verification = self.verify_transaction_signature(sender_address, signature, transaction)
             if transaction_verification:
+                transaction.update({'tx_id':transaction_id}) #add tx_id after verifying
                 self.transactions.append(transaction)
                 return len(self.chain) + 1
             else:
@@ -161,7 +162,8 @@ class Blockchain:
 
         # Reset the current list of transactions
         self.transactions = []
-
+        self.transaction_ids = []
+        
         self.chain.append(block)
         return block
 

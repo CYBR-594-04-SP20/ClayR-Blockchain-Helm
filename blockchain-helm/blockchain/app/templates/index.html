@@ -116,6 +116,7 @@
               for (i = 0; i < response['transactions'].length; i++) { 
 
                 transaction = [count,
+                              response['transactions'][i]["tx_id"],
                               response['transactions'][i]["recipient_address"],
                               response['transactions'][i]["sender_address"],
                               response['transactions'][i]["value"]];
@@ -129,10 +130,11 @@
               $('#unmined_transactions_table').dataTable( {
                 data: transactions,
                 columns: [{ title: "#" },
+                          { title: "ID" },
                           { title: "Recipient Address"},
                           { title: "Sender Address"},
                           { title: "Value"}],
-                columnDefs: [ {targets: [1,2,3], render: $.fn.dataTable.render.ellipsis( 25 )}]
+                columnDefs: [ {targets: [2,3,4], render: $.fn.dataTable.render.ellipsis( 25 )}]
               } );
 
           },
@@ -162,11 +164,13 @@
                 var formattedDateTime = date.toLocaleTimeString("en-us", options);
 
                 transaction = [count,
+                              response["chain"][i]["transactions"][j]["tx_id"],
                               response["chain"][i]["transactions"][j]["recipient_address"],
                               response["chain"][i]["transactions"][j]["sender_address"],
                               response["chain"][i]["transactions"][j]["value"],
                               formattedDateTime,
-                              response["chain"][i]["block_number"]];
+                              response["chain"][i]["block_number"],
+                              response["chain"][i]["merkle_root"]];
                 transactions.push(transaction);
 
                 count += 1;
@@ -176,13 +180,15 @@
             // Restrict a column to 10 characters, do split words
               $('#transactions_table').dataTable( {
                 data: transactions,
-                columns: [{ title: "#" },
+                columns: [{ title: "#"},
+                          { title: "ID"},
                           { title: "Recipient Address"},
                           { title: "Sender Address"},
                           { title: "Value"},
                           { title: "Timestamp"},
-                          { title: "Block"}],
-                columnDefs: [ {targets: [1,2,3,4,5], render: $.fn.dataTable.render.ellipsis( 25 )}]
+                          { title: "Block"},
+                          { title: "Merkle Root"},],
+                columnDefs: [ {targets: [2,3,4,5,6], render: $.fn.dataTable.render.ellipsis( 25 )}]
               } );
 
           },
